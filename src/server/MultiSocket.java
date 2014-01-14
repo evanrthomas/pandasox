@@ -1,44 +1,29 @@
 package server;
-import java.net.*;
-import java.io.*;
 import java.util.ArrayList;
+import java.net.*;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.io.*;
 
-
-public class Server {
-  final static int PORT = 8000;
-  public static void main(String[] asdfa) throws IOException {
-    ServerSocket ss = new ServerSocket(PORT);
-    MultiSocket ms = new MultiSocket();
-    for (int i=0; i<2; i++) {
-      Socket clientSocket = ss.accept();
-      ms.addSocket(clientSocket);
-    }
-
-    try {
-      String s;
-      while ( (s = ms.readline()) != null) {
-          System.out.println(s);
-        }
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    }
-
-  }
-}
-
-
-class MultiSocket {
+public class MultiSocket {
   ArrayList<Socket> sockets;
   BlockingDeque<String> q;
+  ArrayList<PrintWriter> writers;
   public MultiSocket() {
     sockets = new ArrayList<Socket>();
     q = new LinkedBlockingDeque<String>();
+    writers = new ArrayList<PrintWriter>();
   }
 
   public void addSocket(Socket s) {
     sockets.add(s);
+    try {
+      writers.add(
+        new PrintWriter(s.getOutputStream(), true)
+      );
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
     (new Thread(new SingleListener(s, q))).start();
   }
 
@@ -47,7 +32,9 @@ class MultiSocket {
     return q.take();
   }
 
-
+  public void send(String s, int i) {
+    writers.get(i).println(s);
+  }
 
   private class SingleListener implements Runnable {
     Socket clientSocket;

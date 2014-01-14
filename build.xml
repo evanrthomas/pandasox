@@ -1,0 +1,30 @@
+<project>
+  <property name="src.dir"      value="src"/>
+  <property name="build.dir"    value="build"/>
+  <property name="classes.dir"  value="${build.dir}/classes"/>
+  <property name="jar.dir"      value="${build.dir}/jar"/>
+
+  <target name="clean">
+    <delete dir="${build.dir}"/>
+  </target>
+
+  <target name="compile">
+    <mkdir dir="${classes.dir}"/>
+    <javac srcdir="${src.dir}" destdir="${classes.dir}"/>
+  </target>
+
+  <target name="serverjar" depends="compile">
+    <mkdir dir="${jar.dir}" />
+    <jar destfile="${jar.dir}/Server.jar" basedir="${classes.dir}">
+    <manifest>
+      <attribute name="Main-Class" value="server.Server"/>
+    </manifest>
+    </jar>
+  </target>
+
+
+  <target name="runserver" >
+    <java jar="build/jar/Server.jar" fork="true"/>
+  </target>
+
+</project>

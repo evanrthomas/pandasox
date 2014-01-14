@@ -1,1 +1,0 @@
-javac start/HelloWorldSwing.java
