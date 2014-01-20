@@ -1,36 +1,26 @@
 package server;
-import server.MultiSocket;
-import server.Protocol;
-import java.io.*;
-import java.net.*;
-import java.util.ArrayList;
-import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+import blerg.Protocol;
 
 public class Server {
   final static int PORT = 8000;
+  final static int NUM_PLAYERS = 1;
   public static void main(String[] asdfa) throws IOException {
     System.out.println("Server main()");
     ServerSocket ss = new ServerSocket(PORT);
     MultiSocket ms = new MultiSocket();
-    System.out.println("here");
-    for (int i=0; i<2; i++) {
+    for (int i=0; i<NUM_PLAYERS; i++) {
       Socket clientSocket = ss.accept();
       System.out.println(clientSocket);
       ms.addSocket(clientSocket);
+      System.out.println("recieved client connection");
     }
 
-    GameServer gs = new GameServer(ms, 2);
-    try {
-      String s;
-      while ( (s = ms.readline()) != null) {
-          System.out.println(s);
-        }
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    }
+    GameServer gs = new GameServer(ms, NUM_PLAYERS);
     gs.go();
-
   }
 }
 
@@ -48,7 +38,8 @@ class GameServer {
   }
 
   public void go() {
-    setup();
+	System.out.println("game server begin");
+    setupPhase();
   }
 
   public void update() {
@@ -57,14 +48,16 @@ class GameServer {
   }
 
   public void updateBoard() {
-    ms.broadcast(Protocol.serialize(board));
+    ms.broadcast(Protocol.UPDATE_BOARD, board.serialize());
   }
 
+  public void updateHand() {
+  }
 
   //game phases
-  public void setup() {
-    this.ms.broadcast(Protocol.GAME_START);
-    updateBoard();
-    updateHand();
+  public void setupPhase() {
+	System.out.println("setupPhase()");
+    this.ms.broadcast(Protocol.START_GAME);
+    update();
   }
 }

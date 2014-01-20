@@ -1,9 +1,18 @@
 package server;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
 import java.util.ArrayList;
-import java.net.*;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.io.*;
+
+import json.JSON;
+import json.JSONObject;
+import json.JSONPair;
+import json.JSONString;
+import blerg.Protocol;
 
 public class MultiSocket {
   ArrayList<Socket> sockets;
@@ -32,14 +41,28 @@ public class MultiSocket {
     return q.take();
   }
 
-  public void send(String s, int i) {
-    writers.get(i).println(s);
+  public void send(JSON json, int i) {
+    writers.get(i).println(json.toString());
   }
-
-  public void broadcat(String s) {
+  
+  public void broadcast(JSON j) {
     for (int i=0; i<sockets.size(); i++) {
-      send(s, i);
+      send(j, i);
     }
+  }
+  
+  public void broadcast(Protocol type, JSON json) {
+	  for (int i=0; i<writers.size(); i++) {
+		  send(new JSONObject(
+				  new JSONPair("type", new JSONString(type+"")),
+				  new JSONPair("message", json)
+				),
+			i);
+	  }
+  }
+  
+  public void broadcast(Protocol type) {
+	  broadcast(type, new JSONObject());
   }
 
   private class SingleListener implements Runnable {

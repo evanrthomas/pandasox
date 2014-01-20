@@ -1,7 +1,11 @@
 package server;
-import server.Affinity;
-import server.Zone;
-public  abstract class Card {
+import json.JSON;
+import json.JSONObject;
+import json.JSONPair;
+import json.JSONString;
+import json.PandaSoxSerializable;
+public  abstract class Card implements PandaSoxSerializable {
+ 
   Affinity affinity;
   String name;
   int priority;
@@ -10,15 +14,27 @@ public  abstract class Card {
     this.affinity = affinity;
   }
 
+  public JSON serialize() {
+    return new JSONObject(
+        new JSONPair("affinity", new JSONString(affinity + "")),
+        new JSONPair("name", new JSONString(name))
+    );
+  }
+
   public abstract void effect(Board board);
 
-  private class Move extends Card {
+  public static Card[] getAll() {
+    return new Card[]{new Move(Affinity.BODY)};
+  }
+
+  private static class Move extends Card {
     public Move(Affinity affinity) {
       super(affinity);
       name = "Move";
     }
-
-    public void effect(Board board, MultiSocket ms) {
+    
+    @Override
+    public void effect(Board board) {
       //CardLocation oldLoc = CardLocation.parse(ms.expect(Protocol.CARD_LOCATION));
       //Zone newLoc = Zone.parse(ms.expect(Protocol.ZONE));
       //Card c = Board.pop(cl);
