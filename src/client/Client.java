@@ -3,7 +3,6 @@ import java.net.*;
 import java.io.*;
 
 public class Client {
-
   final static int PORT = 8000;
   final static String  HOST = "localhost";
   public static void main(String[] adsf) throws IOException {

@@ -36,6 +36,12 @@ public class MultiSocket {
     writers.get(i).println(s);
   }
 
+  public void broadcat(String s) {
+    for (int i=0; i<sockets.size(); i++) {
+      send(s, i);
+    }
+  }
+
   private class SingleListener implements Runnable {
     Socket clientSocket;
     BlockingDeque<String> q;
