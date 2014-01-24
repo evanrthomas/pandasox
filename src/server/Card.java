@@ -13,7 +13,7 @@ public  abstract class Card implements PandaSoxSerializable {
   public Card(Affinity affinity) {
     this.affinity = affinity;
   }
-
+  
   public JSON serialize() {
     return new JSONObject(
         new JSONPair("affinity", new JSONString(affinity + "")),

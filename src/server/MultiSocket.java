@@ -37,7 +37,7 @@ public class MultiSocket {
   }
 
 
-  public String readline() throws InterruptedException{
+  private String readline() throws InterruptedException{
     return q.take();
   }
 
@@ -63,6 +63,18 @@ public class MultiSocket {
   
   public void broadcast(Protocol type) {
 	  broadcast(type, new JSONObject());
+  }
+  
+  public JSON expect(Protocol type) {
+	  JSONObject msg;
+	  while (true) {
+		  msg = JSONObject.parse(readline());
+		  if (msg.get("type")  == type +"") {
+			  return msg;
+		  } else {
+			  // send error msg over the network (not expected
+		  }
+	  }
   }
 
   private class SingleListener implements Runnable {

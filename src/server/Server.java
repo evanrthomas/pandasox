@@ -25,18 +25,24 @@ public class Server {
 }
 
 class GameServer {
-  MultiSocket ms;
-  Board board;
-  Player[] players;
+  private MultiSocket ms;
+  private Board board;
+  private Player[] players;
+  private final int NUM_PLAYERS;
   public GameServer(MultiSocket ms, int numPlayers) {
     this.ms = ms;
-    board = new Board();
+    board = new Board(numPlayers);
     players = new Player[numPlayers];
+    NUM_PLAYERS = numPlayers;
     for (int i=0; i< numPlayers; i++) {
       players[i] = new Player();
     }
   }
-
+  
+  public int getNumPlayers() {
+	  return NUM_PLAYERS;
+  }
+  
   public void go() {
 	System.out.println("game server begin");
     setupPhase();
@@ -57,7 +63,12 @@ class GameServer {
   //game phases
   public void setupPhase() {
 	System.out.println("setupPhase()");
-    this.ms.broadcast(Protocol.START_GAME);
+    ms.broadcast(Protocol.START_GAME);
     update();
+    ms.broadcast(Protocol.PROMPT_CARD_TO_CENTER);
+    
+    ms.expect(Protocol.PROMPT_CARD_TO_CENTER);
+    
+    ms.expect(Protocol.CARD_TO_CENTER);
   }
 }

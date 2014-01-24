@@ -11,10 +11,12 @@ import json.PandaSoxSerializable;
 public class Board implements PandaSoxSerializable {
   private Player[] players;
   private ArrayList<Card> deck;
-  Zone center;
+  private final int NUM_PLAYERS;
+  private final Zone center;
   int priority;
 
-  public Board() {
+  public Board(int numPlayers) {
+	NUM_PLAYERS = numPlayers;
     deck = new ArrayList<Card>();
     deck.addAll(Arrays.asList(Card.getAll()));
     center = new Zone();
