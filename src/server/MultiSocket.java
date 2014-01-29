@@ -5,6 +5,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.concurrent.BlockingDeque;
@@ -117,5 +118,21 @@ public class MultiSocket {
         throw new RuntimeException("io excpetion dawg");
       }
     }
+  }
+  
+  public static void main(String[] args)throws IOException, InterruptedException {
+	  System.out.println("Server main()");
+	  ServerSocket ss = new ServerSocket(8000);
+	  MultiSocket ms = new MultiSocket();
+	  for (int i=0; i<2; i++) {
+	    Socket clientSocket = ss.accept();
+	    System.out.println(clientSocket);
+	    ms.addSocket(clientSocket);
+	    System.out.println("recieved client connection");
+	  }
+	  Tuple<Integer, String> tup;
+	  while ((tup = ms.readLineAndPlayer()) != null) {
+		  System.out.println("Player " + tup.getFirst() + ":: " + tup.getSecond());
+	  }
   }
 }
