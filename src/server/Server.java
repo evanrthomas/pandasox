@@ -65,10 +65,9 @@ class GameServer {
 	System.out.println("setupPhase()");
     ms.broadcast(Protocol.START_GAME);
     update();
+    
     ms.broadcast(Protocol.PROMPT_CARD_TO_CENTER);
-    
     ms.expect(Protocol.PROMPT_CARD_TO_CENTER);
-    
     ms.expect(Protocol.CARD_TO_CENTER);
   }
 }

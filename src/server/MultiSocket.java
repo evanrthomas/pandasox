@@ -49,27 +49,37 @@ public class MultiSocket {
 	  //TODO: return invalid json message if q.getSecond is invalid json
 	  return q.take();
   }
-
+  
+  /**
+   * 
+   * @param json some json to send over the network
+   * @param i to player i
+   */
   public void send(JSON json, int i) {
     writers.get(i).println(json.toString());
   }
   
-  public void broadcast(JSON j) {
-    for (int i=0; i<sockets.size(); i++) {
-      send(j, i);
-    }
-  }
   
+ /**
+  * 
+  * @param type the protocol type
+  * @param json extra information to send over the wire
+  * 
+  */
   public void broadcast(Protocol type, JSON json) {
 	  for (int i=0; i<writers.size(); i++) {
 		  send(new JSONObject(
 				  new JSONPair("type", new JSONString(type+"")),
 				  new JSONPair("message", json)
 				),
-			i);
+			i); 
 	  }
   }
   
+  /**
+   * 
+   * @param type broadcasts this protocol message to everyone
+   */
   public void broadcast(Protocol type) {
 	  broadcast(type, new JSONObject());
   }
@@ -100,7 +110,7 @@ public class MultiSocket {
     private Socket clientSocket;
     private BlockingDeque<Tuple<Integer, String>> q;
     private final int id;
-
+    
     public SingleListener(Socket clientSocket, BlockingDeque<Tuple<Integer, String>> q) {
       synchronized(sockets) {
     	  id = sockets.size() - 1;
