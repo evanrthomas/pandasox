@@ -8,12 +8,17 @@ import json.JSONPair;
 import json.JSONString;
 import json.PandaSoxSerializable;
 class Player implements PandaSoxSerializable{
+  public int playerID;
   private ArrayList<Card> hand;
   private Zone actionZone;
   private Card awaiting;
   public Player() {
     hand = new ArrayList<Card>();
     actionZone = new Zone();
+  }
+  
+  public int getPlayerID() {
+	return playerID;
   }
 
   public Zone getActionZone() {
