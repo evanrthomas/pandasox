@@ -43,4 +43,9 @@ public class JSONArray extends JSON {
     s += "]";
     return s;
   }
+  
+  @Override
+  public boolean equals(JSON json) {
+	  return false;
+  }
 }

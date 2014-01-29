@@ -2,6 +2,8 @@ package json;
 
 import java.util.ArrayList;
 
+import blerg.Protocol;
+
 public class JSONObject extends JSON{
   JSONPair[] pairs;
   public JSONObject(JSONPair ... pairs) {
@@ -10,15 +12,22 @@ public class JSONObject extends JSON{
   
   public JSON get(String key) {
 	  for (JSONPair p: pairs) {
-		  if (p.key.toString() == key) {
+		  if (p.key.equals(key)) {
 			  return p.value;
 		  }
 	  }
 	  return null;
   }
   
+  public boolean isType(Protocol p) {
+	  JSON type = get("type");
+	  if (type == null) {
+		  return false;
+	  }
+	  return type.equals(new JSONString(p+""));
+  }
+  
   public static JSONObject parse(String raw) {
-	  System.out.println("\njson object parse() ::" + raw);
 	  raw = raw.replaceAll("\\s+", "");
 	  ArrayList<JSONPair> pairs = new ArrayList<JSONPair>();
 	  int colonLoc, commaLoc;
@@ -59,5 +68,10 @@ public class JSONObject extends JSON{
     }
     s += "}";
     return s;
+  }
+  
+  @Override
+  public boolean equals(JSON json) {
+	  return false;
   }
 }

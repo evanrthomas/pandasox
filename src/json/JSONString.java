@@ -1,6 +1,9 @@
 package json;
+
+import blerg.Protocol;
+
 public class JSONString extends JSON {
-  String val;
+  private String val;
   public JSONString(String s) {
     val = s;
   }
@@ -13,6 +16,17 @@ public class JSONString extends JSON {
 	  return new JSONString(raw.substring(1, i));
   }
 
+  public boolean equals(JSON s) {
+	 if (!(s instanceof JSONString)) {
+		 return false;
+	 } else {
+		 return ((JSONString) s).val.equals(val);
+	 }
+  }
+  
+  public String value() {
+	  return val;
+  }
   public String toString() {
     return "\"" + val + "\"";
   }

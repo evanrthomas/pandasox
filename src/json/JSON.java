@@ -1,7 +1,7 @@
 package json;
 public abstract class JSON {
   public abstract String toString();
-  
+  public abstract boolean equals(JSON j);
   public static JSON parse(String s) {
 	  //System.out.println("\nJSON parse() ::" + s);
 	  s = s.replaceAll("\\s+", "");

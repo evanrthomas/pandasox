@@ -41,10 +41,12 @@ public class MultiSocket {
 
 
   private String readline() throws InterruptedException{
-    return q.take().getSecond();
+	  //TODO: return json not string
+    return readLineAndPlayer().getSecond();
   }
   
   private Tuple<Integer, String> readLineAndPlayer() throws InterruptedException {
+	  //TODO: return invalid json message if q.getSecond is invalid json
 	  return q.take();
   }
 
@@ -81,8 +83,10 @@ public class MultiSocket {
 	  JSONObject msg;
 	  while (true) {
 		  Tuple<Integer, String> tup = readLineAndPlayer();
+		  System.out.println("raw ::"+tup.getSecond());
 		  msg = JSONObject.parse(tup.getSecond());
-		  if (msg.get("type").equals(type +"")) {
+		 
+		  if (msg.isType(type)) {
 			  return msg;
 		  } else {
 			  JSONObject obj = new JSONObject( new JSONPair("type",
@@ -121,7 +125,26 @@ public class MultiSocket {
   }
   
   public static void main(String[] args)throws IOException, InterruptedException {
-	  System.out.println("Server main()");
+	  System.out.println(Protocol.TEST+"");
+	  expectTest();
+  }
+  
+  private static void expectTest() throws IOException, InterruptedException{
+	  ServerSocket ss = new ServerSocket(8000);
+	  MultiSocket ms = new MultiSocket();
+	  for (int i=0; i<1; i++) {
+	    Socket clientSocket = ss.accept();
+	    System.out.println(clientSocket);
+	    ms.addSocket(clientSocket);
+	    System.out.println("recieved client connection");
+	  }
+	  while (true) {
+		  JSON obj = ms.expect(Protocol.TEST);
+		  System.out.println("got message ::"+obj.toString());
+	  }
+  }
+  
+  private static void readLineAndPLayerTest() throws IOException, InterruptedException {
 	  ServerSocket ss = new ServerSocket(8000);
 	  MultiSocket ms = new MultiSocket();
 	  for (int i=0; i<2; i++) {
