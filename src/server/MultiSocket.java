@@ -1,4 +1,6 @@
 package server;
+import helper.Tuple;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -15,12 +17,12 @@ import json.JSONString;
 import blerg.Protocol;
 
 public class MultiSocket {
-  ArrayList<Socket> sockets;
-  BlockingDeque<String> q;
-  ArrayList<PrintWriter> writers;
+  private ArrayList<Socket> sockets;
+  private BlockingDeque<Tuple<Integer, String>> q;
+  private ArrayList<PrintWriter> writers;
   public MultiSocket() {
     sockets = new ArrayList<Socket>();
-    q = new LinkedBlockingDeque<String>();
+    q = new LinkedBlockingDeque<Tuple<Integer, String>>();
     writers = new ArrayList<PrintWriter>();
   }
 
@@ -38,7 +40,11 @@ public class MultiSocket {
 
 
   private String readline() throws InterruptedException{
-    return q.take();
+    return q.take().getSecond();
+  }
+  
+  private Tuple<Integer, String> readLineAndPlayer() throws InterruptedException {
+	  return q.take();
   }
 
   public void send(JSON json, int i) {
@@ -65,23 +71,35 @@ public class MultiSocket {
 	  broadcast(type, new JSONObject());
   }
   
-  public JSON expect(Protocol type) {
+  /**
+   * 
+   * @param type
+   * Hangs until it gets a message with the appropriate type
+   */
+  public JSON expect(Protocol type) throws InterruptedException{
 	  JSONObject msg;
 	  while (true) {
-		  msg = JSONObject.parse(readline());
-		  if (msg.get("type")  == type +"") {
+		  Tuple<Integer, String> tup = readLineAndPlayer();
+		  msg = JSONObject.parse(tup.getSecond());
+		  if (msg.get("type").equals(type +"")) {
 			  return msg;
 		  } else {
-			  // send error msg over the network (not expected
+			  JSONObject obj = new JSONObject( new JSONPair("type",
+					  new JSONString(Protocol.UNEXPECTED_MESSAGE_ERROR+"")));
+			  send(obj, tup.getFirst());
 		  }
 	  }
   }
 
   private class SingleListener implements Runnable {
-    Socket clientSocket;
-    BlockingDeque<String> q;
+    private Socket clientSocket;
+    private BlockingDeque<Tuple<Integer, String>> q;
+    private final int id;
 
-    public SingleListener(Socket clientSocket, BlockingDeque<String> q) {
+    public SingleListener(Socket clientSocket, BlockingDeque<Tuple<Integer, String>> q) {
+      synchronized(sockets) {
+    	  id = sockets.size() - 1;
+      }
       this.clientSocket = clientSocket;
       this.q = q;
     }
@@ -93,7 +111,7 @@ public class MultiSocket {
           new InputStreamReader(clientSocket.getInputStream()));
         String s;
         while ((s = in.readLine()) != null) {
-          q.add(s);
+          q.add(new Tuple<Integer, String>(id, s));
         }
       } catch (IOException e) {
         throw new RuntimeException("io excpetion dawg");
