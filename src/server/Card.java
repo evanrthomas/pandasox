@@ -58,13 +58,14 @@ public  abstract class Card implements PandaSoxSerializable {
 	    new JSONPair("visibility", new JSONString("false"))
 	  );
 	}
+
   }
 
   public abstract void effect(Board board);
 
   public static Card[] getAll() {
     return new Card[]{new Move(Affinity.BODY)};
-  }s
+  }
 
   /*new file supportEffects.java?? Would hold all supporting methods that simplify each card effect
   supporting effects:

@@ -1,9 +1,14 @@
 package json;
 public class JSONPair{
-  String key;
+  JSONString key;
   JSON value;
   public JSONPair(String key, JSON val) {
-    this.key = key;
+    this.key = new JSONString(key);
     this.value = val;
+  }
+  
+  public JSONPair(JSONString key, JSON val) {
+	  this.key = key;
+	  this.value = val;
   }
 }
