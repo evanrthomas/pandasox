@@ -10,6 +10,7 @@ public class Zone implements PandaSoxSerializable {
   private ArrayList<Card> cards;
   private String name;
   private int capacity;
+  public boolean barriered; //toggled on when barrier is played into zone, restricts user input into the zone
 
   public Zone() {
 	  this("", -1); //capacity of -1 means infinite
@@ -19,7 +20,7 @@ public class Zone implements PandaSoxSerializable {
     this.capacity = capacity;
     this.cards = new ArrayList<Card>();
   }
-
+  
   public int size() {
     return cards.size();
   }
