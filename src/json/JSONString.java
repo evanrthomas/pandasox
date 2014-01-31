@@ -24,6 +24,10 @@ public class JSONString extends JSON {
 	 }
   }
   
+  public boolean isString(String s) {
+	  return val.equals(s);
+  }
+  
   public String value() {
 	  return val;
   }

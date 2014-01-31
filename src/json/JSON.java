@@ -5,7 +5,7 @@ public abstract class JSON {
   public static JSON parse(String s) {
 	  //System.out.println("\nJSON parse() ::" + s);
 	  s = s.replaceAll("\\s+", "");
-	  switch (s.charAt(0)) {
+	  switch (s.charAt(0)) { 
 	  case '{':
 		  return JSONObject.parse(s);
 	  case '[':

@@ -1,3 +1,4 @@
+/**
 package server;
 import java.util.ArrayList;
 
@@ -9,11 +10,10 @@ import json.JSONString;
 import json.PandaSoxSerializable;
 class Player implements PandaSoxSerializable{
   public int playerID;
-  private ArrayList<Card> hand;
-  private Zone actionZone;
+  private Zone actionZone, hand;
   private Card awaiting;
   public Player() {
-    hand = new ArrayList<Card>();
+    hand = new Zone();
     actionZone = new Zone();
   }
   
@@ -30,12 +30,12 @@ class Player implements PandaSoxSerializable{
   }
 
 
-  public JSON serialize() {
+  public JSONObject serialize(int playerId) {
 	JSON awaitingJSON;
     if (awaiting == null) {
       awaitingJSON = new JSONString("");
     } else {
-      awaitingJSON = awaiting.serialize();
+      awaitingJSON = awaiting.serialize(playerId);
     }
 
     return new JSONObject(
@@ -45,4 +45,4 @@ class Player implements PandaSoxSerializable{
       );
   }
 
-}
+}*/

@@ -6,27 +6,30 @@ import json.JSON;
 import json.JSONArray;
 import json.JSONObject;
 import json.JSONPair;
-import json.PandaSoxSerializable;
+import json.ServerSerializable;
 
-public class Board implements PandaSoxSerializable {
-  private Player[] players;
-  private ArrayList<Card> deck;
-  private final int NUM_PLAYERS;
+public class Board implements ServerSerializable {
+  private Deck deck;
   private final Zone center;
   int priority;
 
-  public Board(int numPlayers) {
-	NUM_PLAYERS = numPlayers;
-    deck = new ArrayList<Card>();
-    deck.addAll(Arrays.asList(Card.getAll()));
+  public Board(Deck deck) {
+	this.deck = deck;    
     center = new Zone();
   }
   
+  public Deck getDeck() {
+	  return deck;
+  }
+  
+  public Zone getCenter() {
+	  return center;
+  }
+  
   @Override
-  public JSON serialize() {
+  public JSONObject serialize(int playerId) {
     return  new JSONObject(
-      new JSONPair("center", center.serialize()),
-      new JSONPair("players", new JSONArray(players))
+      new JSONPair("center", center.serialize(playerId))
     );
   }
 }

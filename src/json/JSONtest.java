@@ -6,12 +6,13 @@ public class JSONtest {
 	public static  void main(String[] asdf) {
 		//simpleStringTest();
 		//simpleArrayTest();
+		//emptyArrayTest();
 		//simpleObjectTest();
 		//test1();
 		//emptyJSONObjectTest();
 		//jsonObjectGetTest();
 		//jsonStringEqualityTest();
-		objIsTypeTest();
+		//objIsTypeTest();
 	}
 	
 	public static void objIsTypeTest() {
@@ -66,8 +67,12 @@ public class JSONtest {
 				new JSONString("hi"),
 				new JSONString("there")
 		);
-		System.out.println(json.toString());
-		System.out.println(JSON.parse(json.toString()).toString());
+		testParse(json);
+	}
+	
+	public static void emptyArrayTest() {
+		JSONArray json = new JSONArray();
+		testParse(json);
 	}
 	
 	public static void test1() {

@@ -12,7 +12,7 @@ public class JSONObject extends JSON{
   
   public JSON get(String key) {
 	  for (JSONPair p: pairs) {
-		  if (p.key.equals(key)) {
+		  if (p.key.isString(key)) {
 			  return p.value;
 		  }
 	  }
@@ -35,7 +35,7 @@ public class JSONObject extends JSON{
 	  JSON val;
 	  assert(raw.charAt(0) == '{');
 	  if (raw.charAt(1) == '}') {
-		  return new JSONObject(pairs.toArray(new JSONPair[pairs.size()]));
+		  return new JSONObject();
 	  }
 	  for (int i = 1; i<raw.length();) {
 		 
@@ -61,7 +61,7 @@ public class JSONObject extends JSON{
     JSONPair p;
     for (int i=0; i< pairs.length; i++) {
       p = pairs[i];
-      s += p.key + ":" + p.value.toString();
+      s += p.key.toString() + ":" + p.value.toString();
       if (i != pairs.length - 1) {
         s += ",";
       }
