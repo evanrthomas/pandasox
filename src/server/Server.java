@@ -46,22 +46,14 @@ class Server {
     setupPhase();
   }
 
-  private void update() {
-    updateBoard();
-    updateHand();
-  }
-
   private void updateBoard() {
 	  for (int player =0; player<NUM_PLAYERS; player ++) {
 		  ms.send(Protocol.UPDATE_BOARD, board.serialize(player), player);
 	  }
   }
 
-  private void updateHand() {
-	  for (int player=0; player<hands.length; player++) {
-		  ms.send(Protocol.UPDATE_HAND, hands[player].serialize(player), player);  
-	  }
-	  
+  private void updateHand(int player) {
+	  ms.send(Protocol.UPDATE_HAND, hands[player].serialize(player), player);  
   }
 
   //game phases
@@ -77,13 +69,16 @@ class Server {
 		
 	}
     ms.broadcast(Protocol.START_GAME);
-    update();
+    updateBoard();
+    for (int player =0; player<NUM_PLAYERS; player++) {
+    	updateHand(player);
+    }
     
     //card to center
     ms.broadcast(Protocol.PROMPT_CARD_TO_CENTER);
     JSONObject[] msgs = ms.expectAll(Protocol.CARD);
     Card toCenter;
-    System.out.println("center ::" + board.getCenter());
+    
     for (int player=0; player<msgs.length; player++) {
     	toCenter = Card.parse((JSONObject) msgs[player].get("extra"));
     	if (!hands[player].contains(toCenter)) {
@@ -91,9 +86,10 @@ class Server {
     		System.out.println("don't contain card "+msgs[player].get("name"));
     	}
     	hands[player].pop(toCenter);
+    	updateHand(player);
     	board.getCenter().add(toCenter);
+    	updateBoard();
     }
-    update();
     
     //card to bottom of deck
     ms.broadcast(Protocol.PROMPT_CARD_TO_DECK_BOTTOM);
@@ -106,9 +102,10 @@ class Server {
     		System.out.println("don't contain card "+msgs[player].get("name"));
     	}
     	hands[player].pop(toDeck);
-    	board.getCenter().add(toDeck);
+    	updateHand(player);
+    	board.getDeck().addBottom(toDeck);
     }
-    updateHand();
     
+    System.out.println("center ::" + board.getCenter());
   }
 }
