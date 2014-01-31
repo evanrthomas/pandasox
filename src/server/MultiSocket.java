@@ -99,7 +99,7 @@ public class MultiSocket {
   public JSONObject[] expectAll(Protocol type) {
 	  Protocol[] arr = new Protocol[sockets.size()];
 	  for (int i=0; i< arr.length; i++) {
-	    	arr[i] = Protocol.CARD_TO_CENTER;
+	    	arr[i] = type;
 	    }
 	  return expect(arr);
   }

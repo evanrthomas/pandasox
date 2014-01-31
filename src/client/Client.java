@@ -56,19 +56,35 @@ public class Client {
 	  d.register(Protocol.UPDATE_HAND, new Handler() {
 	    	@Override
 	    	public void handle(JSONObject json, Writer w) {
+	    		hand = new ArrayList<Card>();
 	    		JSON[] arr = ((JSONArray) json.get("cards")).getElms();
 	    		for (int i=0; i<arr.length; i++) {
 	    			hand.add(Card.parse((JSONObject) arr[i]));
 	    		}
+	    		printHand(hand);
 	    	}
 	    });
 	  
 	  d.register(Protocol.PROMPT_CARD_TO_CENTER, new Handler() {
 	    	@Override
 	    	public void handle(JSONObject json, Writer writer) {
-	    		writer.send(Protocol.CARD_TO_CENTER, hand.get(0).serialize());
+	    		writer.send(Protocol.CARD, hand.get(0).serialize());
 	    	}
 	    });
+	  
+	  d.register(Protocol.PROMPT_CARD_TO_DECK_BOTTOM, new Handler() {
+	    	@Override
+	    	public void handle(JSONObject json, Writer writer) {
+	    		writer.send(Protocol.CARD, hand.get(0).serialize());
+	    	}
+	    });
+  }
+  
+  public void printHand(ArrayList<Card> hand) {
+	  System.out.println("current hand");
+	  for(int i=0; i<hand.size(); i++) {
+		  System.out.println("\t"+hand.get(i).serialize().toString());
+	  }
   }
   
   

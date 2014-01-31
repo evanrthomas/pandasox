@@ -81,7 +81,7 @@ class Server {
     
     //card to center
     ms.broadcast(Protocol.PROMPT_CARD_TO_CENTER);
-    JSONObject[] msgs = ms.expectAll(Protocol.CARD_TO_CENTER);
+    JSONObject[] msgs = ms.expectAll(Protocol.CARD);
     Card toCenter;
     System.out.println("center ::" + board.getCenter());
     for (int player=0; player<msgs.length; player++) {
@@ -93,8 +93,22 @@ class Server {
     	hands[player].pop(toCenter);
     	board.getCenter().add(toCenter);
     }
+    update();
     
-    System.out.println("center ::" +board.getCenter());
+    //card to bottom of deck
+    ms.broadcast(Protocol.PROMPT_CARD_TO_DECK_BOTTOM);
+    msgs = ms.expectAll(Protocol.CARD);
+    Card toDeck;
+    for (int player=0; player<msgs.length; player++) {
+    	toDeck = Card.parse((JSONObject) msgs[player].get("extra"));
+    	if (!hands[player].contains(toDeck)) {
+    		//TODO: send error message
+    		System.out.println("don't contain card "+msgs[player].get("name"));
+    	}
+    	hands[player].pop(toDeck);
+    	board.getCenter().add(toDeck);
+    }
+    updateHand();
     
   }
 }
