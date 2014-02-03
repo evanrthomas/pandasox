@@ -29,7 +29,8 @@ public class Board implements ServerSerializable {
   @Override
   public JSONObject serialize(int playerId) {
     return  new JSONObject(
-      new JSONPair("center", center.serialize(playerId))
+      new JSONPair("center", center.serialize(playerId)),
+      new JSONPair("deck", deck.serialize(playerId))
     );
   }
 }

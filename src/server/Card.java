@@ -52,16 +52,16 @@ public  abstract class Card implements ServerSerializable {
  
   
   public JSONObject serialize(int playerID) {
-	if (visibilityArray[playerID]) {
+	if (visibilityArray[playerID] || playerID < 0) {
 	  return new JSONObject(
 			  new JSONPair("name", name),
 			  new JSONPair("affinity", affinity+""),
-			  new JSONPair("id", visibleId+""),
-			  new JSONPair("priority", priority+"")
+			  new JSONPair("id", visibleId+"")
 			  );
 	} else {
 	  return new JSONObject(
-	    new JSONPair("visibility", new JSONString("false"))
+		new JSONPair("id", visibleId+""),
+	    new JSONPair("invisible", new JSONString("true"))
 	  );
 	}
 

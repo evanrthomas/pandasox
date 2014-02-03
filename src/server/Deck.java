@@ -29,6 +29,10 @@ public class Deck implements ServerSerializable {
 		return cards;
 	}
 	
+	public int size() {
+		return cards.size();
+	}
+	
 	public void addBottom(Card c) {
 		cards.addLast(c);
 	}

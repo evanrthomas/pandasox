@@ -22,14 +22,15 @@ public class Client {
   private Dispatcher dispatcher;
   
   private ArrayList<Card> hand;
+  private ArrayList<Card> discard;
   public static void main(String[] adsf) throws IOException {
 	(new Client()).go();
-    
   }
   
   public Client() throws IOException{
 	  Socket socket = new Socket(HOST, PORT);
 	  hand = new ArrayList<Card>();
+	  discard = new ArrayList<Card>();
 	  dispatcher = new Dispatcher(socket);
 	  registerHandlers(dispatcher);
   }
@@ -61,9 +62,23 @@ public class Client {
 	    		for (int i=0; i<arr.length; i++) {
 	    			hand.add(Card.parse((JSONObject) arr[i]));
 	    		}
-	    		printHand(hand);
+	    		System.out.println("hand");
+	    		printCards(hand);
 	    	}
 	    });
+	  
+	  d.register(Protocol.UPDATE_DISCARD, new Handler() {
+		  @Override
+		  public void handle(JSONObject json, Writer w) {
+			  discard = new ArrayList<Card>();
+	    		JSON[] arr = ((JSONArray) json.get("cards")).getElms();
+	    		for (int i=0; i<arr.length; i++) {
+	    			discard.add(Card.parse((JSONObject) arr[i]));
+	    		}
+	    		System.out.println("discard");
+	    		printCards(discard);
+		  }
+	  });
 	  
 	  d.register(Protocol.PROMPT_CARD_TO_CENTER, new Handler() {
 	    	@Override
@@ -78,9 +93,18 @@ public class Client {
 	    		writer.send(Protocol.CARD, hand.get(0).serialize());
 	    	}
 	    });
+	  
+	  d.register(Protocol.PROMPT_DRAWN_CARDS, new Handler() {
+		  @Override
+		  public void handle(JSONObject json, Writer writer) {
+			  System.out.println("drawn cards handler()");
+			  JSONObject card = (JSONObject)((JSONArray)json.get("cards")).getElms()[0];
+			  writer.send(Protocol.CARD, card);
+		  }
+	  });
   }
   
-  public void printHand(ArrayList<Card> hand) {
+  public void printCards(ArrayList<Card> hand) {
 	  System.out.println("current hand");
 	  for(int i=0; i<hand.size(); i++) {
 		  System.out.println("\t"+hand.get(i).serialize().toString());
@@ -96,7 +120,7 @@ class Writer {
 		out = new PrintWriter(socket.getOutputStream(), true);
 	}
 	
-	public void send(Protocol type, JSON json) {
+	public void send(Protocol type, JSONObject json) {
 		json = new JSONObject(
 				new JSONPair("type", type+""),
 				new JSONPair("extra", json));
@@ -131,10 +155,12 @@ class Dispatcher implements Runnable {
 		try{
 			String line;
 			while((line = in.readLine()) != null ) {
-				System.out.println("from server <<::" + line);
+				System.out.println("from server <<< ::" + line);
 				JSONObject obj = JSONObject.parse(line);
 				Protocol type = Protocol.valueOf(((JSONString) obj.get("type")).value());
-				handlerMap.get(type).handle((JSONObject) obj.get("extra"), writer);
+				if (handlerMap.containsKey(type)) {
+					handlerMap.get(type).handle((JSONObject) obj.get("extra"), writer);
+				}
 			}
 		} catch(IOException e) {
 			throw new RuntimeException(e);
