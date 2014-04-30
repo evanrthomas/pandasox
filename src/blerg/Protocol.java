@@ -10,37 +10,9 @@ public enum Protocol {
   UNEXPECTED_MESSAGE_ERROR, PLAY_ERROR,
   
   // with extra info
-  UPDATE_BOARD, UPDATE_HAND, UPDATE_DISCARD, PROMPT_DRAWN_CARDS, WINNER,
+  UPDATE_BOARD, UPDATE_PLAYER, PROMPT_DRAWN_CARDS, WINNER,
 
 
   //From Client
-  CARD, PLAY_DETAILS, CARD_LOCATION, ZONE;
+  CARD, PLAY_DETAILS;
 }
-
-
-	/*
-	 *  Board
-	 *  {"center": ... json dump of center ...
-	 *   "players": [... json dump of player 1, ... json dump of player 2 ...]
-	 *   }
-	 *
-	 *   Player
-	 *   {"action zone": ... json dump of azone ...,
-	 *    "awaiting play zone": either empty string or dump of a single card
-	 *    "hand": [... jdump of card ..., ... jdump of card ..., ...]
-	 *    }
-	 *
-	 *  {"center":Center.serialize(),
-	 *  "players":[Player1.serialize(), Player2.sereailze() ...]}
-	 *
-	 *  ]
-	 *{"action zone":[
-	 *          [{"id":1,
-	 *            "action zone": [{"move red", "face down"}
-	 *          },
-	 *          {"id":2,
-	 *           "action zone": [{"face down":false, "affinity":"red", "name":"move"}]
-	 *          }],
-	 *          [{... second action zone... }]
-	 *            ]
-	 */

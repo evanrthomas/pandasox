@@ -21,10 +21,20 @@ public class MultiSocket {
   private ArrayList<Socket> sockets;
   private BlockingDeque<Tuple<Integer, JSONObject>> q;
   private ArrayList<PrintWriter> writers;
-  public MultiSocket() {
+  
+  private static MultiSocket publicSocket;
+  
+  private MultiSocket() {
     sockets = new ArrayList<Socket>();
     q = new LinkedBlockingDeque<Tuple<Integer, JSONObject>>();
     writers = new ArrayList<PrintWriter>();
+  }
+  
+  public static MultiSocket getMultiSocket() {
+	  if (publicSocket == null) {
+		  return (publicSocket = new MultiSocket());
+	  }
+	  return publicSocket;
   }
 
   public void addSocket(Socket s) {
@@ -37,11 +47,6 @@ public class MultiSocket {
       throw new RuntimeException(e);
     }
     (new Thread(new SingleListener(s, q))).start();
-  }
-
-
-  private JSONObject readline() {
-    return readLineAndPlayer().getSecond();
   }
   
   private Tuple<Integer, JSONObject> readLineAndPlayer()  {
@@ -104,13 +109,28 @@ public class MultiSocket {
 	  return expect(arr);
   }
   
+  public JSONObject expect(Protocol type, int player) {
+	  //TODO: expects only happen after an appropriate message has been sent
+	  // and you expect a reply. Make an expect callback to pass into send() instead of
+	  // sending then expecting
+	  Tuple<Integer, JSONObject> tup;
+	  while ((tup = readLineAndPlayer()) != null) {
+		  if (tup.getFirst() == player && tup.getSecond().isType(type)) {
+			  return tup.getSecond();
+		  }
+	  }
+	  throw new RuntimeException("should never get here"); //TODO: better error message, think about how it could get here
+  }
+  
   /**
    * Hangs until it gets a message of type1 from p1 and type2 from p2 ..
    * @param type1
    * @param type2
    * @return
    */
-  public JSONObject[] expect(Protocol ... types) {
+  private JSONObject[] expect(Protocol ... types) {
+	  //TODO: is this method neccessary? only one method in this class uses
+	  // it. I don't think you ever expect multiple different types
 	  JSONObject thisMsg;
 	  JSONObject[] msgs = new JSONObject[types.length];
 	  int player;

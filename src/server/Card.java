@@ -1,31 +1,37 @@
 package server;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
-import json.JSON;
 import json.JSONObject;
 import json.JSONPair;
 import json.JSONString;
 import json.ServerSerializable;
-public  abstract class Card implements ServerSerializable {
+public  abstract class Card implements ServerSerializable, Comparable<Card> {
 
   private final Affinity affinity;
   private final String name;
   private final int priority;
   private boolean[] visibilityArray; // this array has 1 element for each player, 0 = this.card is not visible to that player. 1 = visible to that player
+  private int visibleId; //i'd like to make this final, but the compiler won't let me
+  private Zone zone;
+  
+  private static MultiSocket ms = MultiSocket.getMultiSocket();
   private static int NUM_PLAYERS;
   private static ArrayList<Card> cards;
-  
-  private int visibleId; //i'd like to make this final, but the compiler won't let me
   private static Set<Integer> visibleIds = new HashSet<Integer>();
+  private static Map<Integer, Card> visibleIdMap = new HashMap<Integer, Card>();
   
-  public abstract void effect(Board board);
+  public abstract void effect(int playedby, JSONObject playdetails);
   
   public Card(String name, Affinity affinity, int priority) {
     this.affinity = affinity;
     this.name = name;
     this.priority = priority;
+    //this.ms = MultiSocket.getMultiSocket();
+    
     visibilityArray = new boolean[NUM_PLAYERS];
     for (int i = 0; i < visibilityArray.length; i++) {
   	  visibilityArray[i] = false;
@@ -38,18 +44,31 @@ public  abstract class Card implements ServerSerializable {
     visibleId = i;
 	visibleIds.add(i);
   }
+  
+  @Override
+  public int compareTo(Card other) {
+	  if (priority < other.priority) {
+		  return -1;
+	  } else {
+		  return (Affinity.MIND == this.affinity && Affinity.BODY == other.affinity) ||
+				 (Affinity.BODY == this.affinity && Affinity.NATURE == other.affinity) ||
+				 (Affinity.NATURE == this.affinity && Affinity.MIND == other.affinity) ?
+						 1 : -1;
+	  }
+	  
+  }
 
+  /**
   public void revealToAll() {
 	for (int i = 0; i < visibilityArray.length; i++) {
 	  visibilityArray[i] = true;
 	}
   }
+  */
   
   public void changeVisibility(int playerID, boolean visibility) {
 	visibilityArray[playerID] = visibility;
   }
-  
- 
   
   public JSONObject serialize(int playerID) {
 	if (visibilityArray[playerID] || playerID < 0) {
@@ -78,6 +97,9 @@ public  abstract class Card implements ServerSerializable {
   }
 
   public static Card[] makeAll(int numPlayers) {
+	if (cards != null) {
+		return cards.toArray(new Card[cards.size()]);
+	}
 	NUM_PLAYERS = numPlayers;
 	cards  = new ArrayList<Card>();
 	Affinity[] affinities = {Affinity.MIND, Affinity.BODY, Affinity.NATURE};
@@ -97,15 +119,6 @@ public  abstract class Card implements ServerSerializable {
 	}
 	return cards.toArray(new Card[cards.size()]);
   }
-  /*new file supportEffects.java?? Would hold all supporting methods that simplify each card effect
-  supporting effects:
-  changeZone: change a cards zone    used for "move", "swap", draw steps??, real talk: everything
-  
-  changeZone method used for... !barrier, bury, move, swap, !gem,
-    recall, smuggle, !lockdown, pitch, !rearrange, ?mirror?      
-  
-  Problem: for swap/recall, how do we place cards into the exact old slot as before
-  */
   
   private static class Barrier extends Card {
     public Barrier(Affinity affinity) {
@@ -113,9 +126,10 @@ public  abstract class Card implements ServerSerializable {
 	}
 	    
     @Override
-	public void effect(Board board) {
-	  //toggles Barriered boolean of the zone barrier was played into
-      //need getZone method for cards?
+	public void effect(int playedby, JSONObject playdetails) { 
+    	int zoneid = Integer.parseInt((
+    			(JSONString)playdetails.get("zoneid")).value());
+    	Zone.find(zoneid).barrier();
     }
   }
   
@@ -125,8 +139,16 @@ public  abstract class Card implements ServerSerializable {
 	}
 	    
 	@Override
-	public void effect(Board board) {
-	  //changeZone(selectedCard, discard)
+	public void effect(int playedby, JSONObject playdetails) {
+		//need to know the zone the affected card is in (to pop it) and the player 
+		//who played this card
+		int visibleid = Integer.parseInt((
+    			(JSONString)playdetails.get("visibleid")).value());
+		Card c = visibleIdMap.get(visibleid);
+		
+		c.zone.pop(c);
+		Player.find(playedby).getDiscard().add(c);
+		
 	}
   }
   
@@ -136,7 +158,7 @@ public  abstract class Card implements ServerSerializable {
 	}
 	
 	@Override
-	public void effect(Board board) {
+	public void effect(int playedby, JSONObject playdetails) {
 	  //oldLocA = selectedCardA.zone
 	  //oldLocB = selectedCardB.zone
 	  //changeZone(cardA, oldLocB)
@@ -150,7 +172,7 @@ public  abstract class Card implements ServerSerializable {
     }
     
     @Override
-    public void effect(Board board) {
+    public void effect(int playedby, JSONObject playdetails) {
       //CardLocation oldLoc = CardLocation.parse(ms.expect(Protocol.CARD_LOCATION));
       //Zone newLoc = Zone.parse(ms.expect(Protocol.ZONE));
       //Card c = Board.pop(cl);
@@ -164,7 +186,7 @@ public  abstract class Card implements ServerSerializable {
 	}
 	    
 	@Override
-	public void effect(Board board) {
+	public void effect(int playedby, JSONObject playdetails) {
 	  //adds another affinity to itself when played face up
 	}
   }
@@ -175,7 +197,7 @@ public  abstract class Card implements ServerSerializable {
 	}
   
     @Override
-    public void effect(Board board) {
+    public void effect(int playedby, JSONObject playdetails) {
       //userInput, card in hand = selectedCardA
       //userInput, card in center = selectedCardB
       //changeZone(selectedCardA, center)
@@ -190,7 +212,7 @@ public  abstract class Card implements ServerSerializable {
 	}
   
     @Override
-    public void effect(Board board) {
+    public void effect(int playedby, JSONObject playdetails) {
       //userInput, card in discard = selectedCard
       //changeZone(selectedCard, smuggle.zone)
     }
@@ -202,7 +224,7 @@ public  abstract class Card implements ServerSerializable {
 	}
   
     @Override
-    public void effect(Board board) {
+    public void effect(int playedby, JSONObject playdetails) {
       //
     }
   }
@@ -213,7 +235,7 @@ public  abstract class Card implements ServerSerializable {
 	}
   
     @Override
-    public void effect(Board board) {
+    public void effect(int playedby, JSONObject playdetails) {
       //can't play Pitch if 0 cards in discard. If only 1 card in discard, user only selects 1 card from Hand
       //userInput, selects up to 2 cards from hand = selectedCardA + B
       //userInput, selects same number from discard = selectedCardC + D
@@ -230,7 +252,7 @@ public  abstract class Card implements ServerSerializable {
 	}
   
     @Override
-    public void effect(Board board) {
+    public void effect(int playedby, JSONObject playdetails) {
       //show in order that card were popped from deck
       //user clicks cards in order 
     }

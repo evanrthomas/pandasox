@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.swing.JLabel;
+
 import json.JSON;
 import json.JSONArray;
 import json.JSONObject;
@@ -20,9 +22,13 @@ public class Client {
   private final static String  HOST = "localhost";
   private BufferedReader in;
   private Dispatcher dispatcher;
-  
+  private Card lastCardPlayed;
   private ArrayList<Card> hand;
+  private ArrayList<Card> azone;
   private ArrayList<Card> discard;
+  private Card[] center;
+  private ClientView cv;
+  
   public static void main(String[] adsf) throws IOException {
 	(new Client()).go();
   }
@@ -31,13 +37,19 @@ public class Client {
 	  Socket socket = new Socket(HOST, PORT);
 	  hand = new ArrayList<Card>();
 	  discard = new ArrayList<Card>();
-	  dispatcher = new Dispatcher(socket);
+	  azone = new ArrayList<Card>();
+	  center = new Card[2];
+	  
+	  
+	  cv = new ClientView(hand, discard, azone, center);
+	  
+	  dispatcher = new Dispatcher(socket, cv);
 	  registerHandlers(dispatcher);
   }
   
   public void go() {
-	    Thread dispatcherThread = new Thread(dispatcher);
-	    dispatcherThread.start();
+	  (new Thread(dispatcher)).start();
+	  cv.show();
   }
   
   public void registerHandlers(Dispatcher d) {
@@ -47,50 +59,51 @@ public class Client {
 	    		
 	    	}
 	    });
+	  
 	  d.register(Protocol.UPDATE_BOARD, new Handler() {
 	    	@Override
 	    	public void handle(JSONObject json, Writer w) {
-	    		
+	    		JSON[] elms = ((JSONArray)json.get("center")).getElms();
+	    		center = new Card[2];
+	    		for (int i=0; i<2; i++) {
+	    			if (i <elms.length) {
+	    				center[i] = Card.parse((JSONObject)elms[i]);
+	    			}
+	    		}
+	    		cv.repaint();
 	    	}
 	    });
 	  
-	  d.register(Protocol.UPDATE_HAND, new Handler() {
+	  d.register(Protocol.UPDATE_PLAYER, new Handler() {
 	    	@Override
 	    	public void handle(JSONObject json, Writer w) {
-	    		hand = new ArrayList<Card>();
-	    		JSON[] arr = ((JSONArray) json.get("cards")).getElms();
+	    		hand.clear();
+	    		discard.clear();
+	    		JSON[] arr = ((JSONArray) json.get("hand")).getElms();
 	    		for (int i=0; i<arr.length; i++) {
 	    			hand.add(Card.parse((JSONObject) arr[i]));
+	    		}
+	    		arr = ((JSONArray) json.get("discard")).getElms();
+	    		for (int i=0; i<arr.length; i++) {
+	    			discard.add(Card.parse((JSONObject) arr[i]));
 	    		}
 	    		System.out.println("hand");
 	    		printCards(hand);
 	    	}
 	    });
 	  
-	  d.register(Protocol.UPDATE_DISCARD, new Handler() {
-		  @Override
-		  public void handle(JSONObject json, Writer w) {
-			  discard = new ArrayList<Card>();
-	    		JSON[] arr = ((JSONArray) json.get("cards")).getElms();
-	    		for (int i=0; i<arr.length; i++) {
-	    			discard.add(Card.parse((JSONObject) arr[i]));
-	    		}
-	    		System.out.println("discard");
-	    		printCards(discard);
-		  }
-	  });
-	  
 	  d.register(Protocol.PROMPT_CARD_TO_CENTER, new Handler() {
 	    	@Override
 	    	public void handle(JSONObject json, Writer writer) {
-	    		writer.send(Protocol.CARD, hand.get(0).serialize());
+	    		getCard(); //TODO: bookmark
+	    		//writer.send(Protocol.CARD, hand.get(0).serialize());
 	    	}
 	    });
 	  
 	  d.register(Protocol.PROMPT_CARD_TO_DECK_BOTTOM, new Handler() {
 	    	@Override
 	    	public void handle(JSONObject json, Writer writer) {
-	    		writer.send(Protocol.CARD, hand.get(0).serialize());
+	    		//writer.send(Protocol.CARD, hand.get(0).serialize());
 	    	}
 	    });
 	  
@@ -98,8 +111,25 @@ public class Client {
 		  @Override
 		  public void handle(JSONObject json, Writer writer) {
 			  System.out.println("drawn cards handler()");
-			  JSONObject card = (JSONObject)((JSONArray)json.get("cards")).getElms()[0];
-			  writer.send(Protocol.CARD, card);
+			  JSONObject card = (JSONObject)(
+					  (JSONArray)json.get("cards")).getElms()[0];
+			  //writer.send(Protocol.CARD, card);
+		  }
+	  });
+	  
+	  d.register(Protocol.PROMPT_CARD_TO_PLAY, new Handler() {
+		  @Override
+		  public void handle(JSONObject json, Writer writer) {
+			System.out.println("prompt car to play handler()");
+			//writer.send(Protocol.CARD, 
+			//		(lastCardPlayed = hand.get(0)).serialize()); 
+		  }
+	  });
+	  
+	  d.register(Protocol.PROMPT_PLAY_DETAILS, new Handler() {
+		  @Override
+		  public void handle(JSONObject json, Writer writer) {
+			  
 		  }
 	  });
   }
@@ -138,8 +168,10 @@ class Dispatcher implements Runnable {
 	private Map<Protocol, Handler> handlerMap;
 	private BufferedReader in;
 	private Writer writer;
+	private ClientView cv;
 	
-	public Dispatcher(Socket socket) throws IOException{
+	public Dispatcher(Socket socket, ClientView cv) throws IOException{
+		this.cv = cv;
 		in = new BufferedReader(
 	            new InputStreamReader(socket.getInputStream()));
 		writer = new Writer(socket);
@@ -158,13 +190,19 @@ class Dispatcher implements Runnable {
 				System.out.println("from server <<< ::" + line);
 				JSONObject obj = JSONObject.parse(line);
 				Protocol type = Protocol.valueOf(((JSONString) obj.get("type")).value());
+				cv.setMessage(type +"");
 				if (handlerMap.containsKey(type)) {
-					handlerMap.get(type).handle((JSONObject) obj.get("extra"), writer);
+					dispatch(type, obj);
 				}
 			}
 		} catch(IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+	
+	public void dispatch(Protocol type, JSONObject obj) {
+		Card.unselect();
+		handlerMap.get(type).handle((JSONObject) obj.get("extra"), writer);
 	}
 }
 

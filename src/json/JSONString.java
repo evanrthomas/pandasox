@@ -2,6 +2,7 @@ package json;
 
 import blerg.Protocol;
 
+//TODO: Change to JSONValue<E>, can be int, string, boolean
 public class JSONString extends JSON {
   private String val;
   public JSONString(String s) {
